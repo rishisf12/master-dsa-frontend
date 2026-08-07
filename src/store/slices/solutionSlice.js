@@ -2,19 +2,21 @@ export const createSolutionSlice = (set, get) => ({
   // State
   solutions: {}, // key: day_id (integer), value: array of solutions
   currentSolution: null,
+  selectedDayId: null,  // ✅ ADD THIS
   isSaving: false,
   isEditing: false,
 
   // Actions
+  setSelectedDayId: (dayId) => set({ selectedDayId: dayId }),  // ✅ ADD THIS
+  
   setSolutions: (dayId, solutions) => set((state) => ({
     solutions: { ...state.solutions, [dayId]: solutions }
   })),
   
-  // ✅ ADD THIS - Bulk add solutions
   addSolutions: (dayId, solutions) => set((state) => ({
     solutions: {
       ...state.solutions,
-      [dayId]: solutions // Replace with fresh data from API
+      [dayId]: solutions
     }
   })),
   
@@ -46,7 +48,6 @@ export const createSolutionSlice = (set, get) => ({
     }
   })),
   
-  // ✅ ADD THIS - Clear solutions for a day
   clearSolutions: (dayId) => set((state) => ({
     solutions: {
       ...state.solutions,
@@ -60,7 +61,6 @@ export const createSolutionSlice = (set, get) => ({
   
   clearCurrentSolution: () => set({ currentSolution: null }),
   
-  // ✅ ADD THIS - Get solutions for a specific day
   getSolutionsByDay: (dayId) => {
     const state = get();
     return state.solutions[dayId] || [];
