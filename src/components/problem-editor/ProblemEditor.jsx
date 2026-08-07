@@ -28,8 +28,10 @@ export const ProblemEditor = ({ date, problemNumber, dayId, existingSolution }) 
     pattern: '',
     pythonCode: getDefaultCode('python'),
     cppCode: getDefaultCode('cpp'),
-    timeComplexity: '',
-    spaceComplexity: '',
+    pythonTimeComplexity: '',
+    pythonSpaceComplexity: '',
+    cppTimeComplexity: '',
+    cppSpaceComplexity: '',
     notes: '',
   });
 
@@ -40,7 +42,7 @@ export const ProblemEditor = ({ date, problemNumber, dayId, existingSolution }) 
   const [solutionId, setSolutionId] = useState(null);
   const [aiSummary, setAiSummary] = useState(null);
 
-  // ✅ Load existing solution when available
+  // Load existing solution when available
   useEffect(() => {
     if (existingSolution) {
       console.log('Loading existing solution:', existingSolution);
@@ -52,8 +54,10 @@ export const ProblemEditor = ({ date, problemNumber, dayId, existingSolution }) 
         pattern: existingSolution.pattern || '',
         pythonCode: existingSolution.python_code || getDefaultCode('python'),
         cppCode: existingSolution.cpp_code || getDefaultCode('cpp'),
-        timeComplexity: existingSolution.time_complexity || '',
-        spaceComplexity: existingSolution.space_complexity || '',
+        pythonTimeComplexity: existingSolution.python_time_complexity || '',
+        pythonSpaceComplexity: existingSolution.python_space_complexity || '',
+        cppTimeComplexity: existingSolution.cpp_time_complexity || '',
+        cppSpaceComplexity: existingSolution.cpp_space_complexity || '',
         notes: existingSolution.notes || '',
       });
       
@@ -61,10 +65,8 @@ export const ProblemEditor = ({ date, problemNumber, dayId, existingSolution }) 
       setIsComplete(existingSolution.is_complete || false);
       setAiSummary(existingSolution.ai_summary || null);
       
-      // If solution exists, switch to view mode (read-only)
       setIsEditing(false);
     } else {
-      // Reset to default state for new solution
       setFormData({
         problemName: '',
         problemUrl: '',
@@ -72,8 +74,10 @@ export const ProblemEditor = ({ date, problemNumber, dayId, existingSolution }) 
         pattern: '',
         pythonCode: getDefaultCode('python'),
         cppCode: getDefaultCode('cpp'),
-        timeComplexity: '',
-        spaceComplexity: '',
+        pythonTimeComplexity: '',
+        pythonSpaceComplexity: '',
+        cppTimeComplexity: '',
+        cppSpaceComplexity: '',
         notes: '',
       });
       setSolutionId(null);
@@ -83,8 +87,9 @@ export const ProblemEditor = ({ date, problemNumber, dayId, existingSolution }) 
     }
   }, [existingSolution]);
 
-  const handleRunPython = async () => {
-    const result = await executeCode('python', formData.pythonCode);
+  const handleRunPython = async (executionInfo) => {
+    const usePython3 = executionInfo?.usePython3 !== undefined ? executionInfo.usePython3 : true;
+    const result = await executeCode('python', formData.pythonCode, '', usePython3);
     setOutput(prev => ({ ...prev, python: result.stdout || result.stderr }));
   };
 
@@ -119,8 +124,10 @@ export const ProblemEditor = ({ date, problemNumber, dayId, existingSolution }) 
         pattern: formData.pattern,
         python_code: formData.pythonCode,
         cpp_code: formData.cppCode,
-        time_complexity: formData.timeComplexity,
-        space_complexity: formData.spaceComplexity,
+        python_time_complexity: formData.pythonTimeComplexity,
+        python_space_complexity: formData.pythonSpaceComplexity,
+        cpp_time_complexity: formData.cppTimeComplexity,
+        cpp_space_complexity: formData.cppSpaceComplexity,
         notes: formData.notes,
         day_id: dayId,
         is_saved: true,
@@ -129,11 +136,9 @@ export const ProblemEditor = ({ date, problemNumber, dayId, existingSolution }) 
 
       let result;
       if (solutionId) {
-        // Update existing solution
         result = await updateSolution({ id: solutionId, data });
         showToast.success('Solution updated successfully!');
       } else {
-        // Create new solution
         result = await createSolution(data);
         setSolutionId(result.id);
         showToast.success('Solution saved successfully!');
@@ -159,9 +164,7 @@ export const ProblemEditor = ({ date, problemNumber, dayId, existingSolution }) 
 
   const handleCancel = () => {
     if (solutionId) {
-      // If solution exists, go back to view mode
       setIsEditing(false);
-      // Reload the existing data
       if (existingSolution) {
         setFormData({
           problemName: existingSolution.problem_name || '',
@@ -170,15 +173,16 @@ export const ProblemEditor = ({ date, problemNumber, dayId, existingSolution }) 
           pattern: existingSolution.pattern || '',
           pythonCode: existingSolution.python_code || getDefaultCode('python'),
           cppCode: existingSolution.cpp_code || getDefaultCode('cpp'),
-          timeComplexity: existingSolution.time_complexity || '',
-          spaceComplexity: existingSolution.space_complexity || '',
+          pythonTimeComplexity: existingSolution.python_time_complexity || '',
+          pythonSpaceComplexity: existingSolution.python_space_complexity || '',
+          cppTimeComplexity: existingSolution.cpp_time_complexity || '',
+          cppSpaceComplexity: existingSolution.cpp_space_complexity || '',
           notes: existingSolution.notes || '',
         });
         setAiSummary(existingSolution.ai_summary || null);
         setIsComplete(existingSolution.is_complete || false);
       }
     } else {
-      // No solution, go back to empty state
       setFormData({
         problemName: '',
         problemUrl: '',
@@ -186,8 +190,10 @@ export const ProblemEditor = ({ date, problemNumber, dayId, existingSolution }) 
         pattern: '',
         pythonCode: getDefaultCode('python'),
         cppCode: getDefaultCode('cpp'),
-        timeComplexity: '',
-        spaceComplexity: '',
+        pythonTimeComplexity: '',
+        pythonSpaceComplexity: '',
+        cppTimeComplexity: '',
+        cppSpaceComplexity: '',
         notes: '',
       });
       setAiSummary(null);
@@ -277,8 +283,10 @@ export const ProblemEditor = ({ date, problemNumber, dayId, existingSolution }) 
         pythonCode={formData.pythonCode}
         cppCode={formData.cppCode}
         problemName={formData.problemName}
-        timeComplexity={formData.timeComplexity}
-        spaceComplexity={formData.spaceComplexity}
+        pythonTimeComplexity={formData.pythonTimeComplexity}
+        pythonSpaceComplexity={formData.pythonSpaceComplexity}
+        cppTimeComplexity={formData.cppTimeComplexity}
+        cppSpaceComplexity={formData.cppSpaceComplexity}
         notes={formData.notes}
         isEditing={isEditing}
         isAdminVerified={isAdminVerified}

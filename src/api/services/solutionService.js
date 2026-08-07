@@ -25,10 +25,15 @@ export const solutionService = {
     }
   },
 
-  // Get solutions for a day
-  getDaySolutions: async (dayId) => {
+  // ✅ FIXED: Rename to match hook's expected method name
+  getSolutionsByDay: async (dayId) => {
     const response = await apiClient.get(API_ENDPOINTS.DAY_SOLUTIONS(dayId));
     return response.data;
+  },
+
+  // ✅ Keep alias for backward compatibility
+  getDaySolutions: async (dayId) => {
+    return solutionService.getSolutionsByDay(dayId);
   },
 
   // Create solution

@@ -1,14 +1,18 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { MonthGrid } from './MonthGrid';
+
 
 export const CalendarView = () => {
   const currentYear = 2026;
-  const months = [
-    { index: 0, name: 'August' },
-    { index: 1, name: 'September' },
-    { index: 2, name: 'October' },
-    { index: 3, name: 'November' },
-  ];
+  const [months, setMonths] = useState([
+    { index: 7, name: 'August' },    // 7 = August (0-indexed)
+    { index: 8, name: 'September' },
+    { index: 9, name: 'October' },
+    { index: 10, name: 'November' },
+  ]);
+
+  // Optional: Fetch months data if needed
+  // const { months: fetchedMonths } = useMonth(currentYear);
 
   return (
     <div className="space-y-8 max-h-[calc(100vh-200px)] overflow-y-auto px-2 pb-8">

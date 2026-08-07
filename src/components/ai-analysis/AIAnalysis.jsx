@@ -10,17 +10,18 @@ export const AIAnalysis = ({
   pythonCode,
   cppCode,
   problemName,
-  timeComplexity,
-  spaceComplexity,
+  pythonTimeComplexity,
+  pythonSpaceComplexity,
+  cppTimeComplexity,
+  cppSpaceComplexity,
   notes,
   isEditing,
   isAdminVerified,
-  existingSummary, // ✅ New prop for existing AI summary
+  existingSummary,
 }) => {
   const { generateSummary, isGenerating } = useAI();
   const [summary, setSummary] = useState(null);
 
-  // ✅ Load existing summary when available
   useEffect(() => {
     if (existingSummary) {
       console.log('Loading existing AI summary:', existingSummary);
@@ -39,13 +40,26 @@ export const AIAnalysis = ({
       return;
     }
 
-    const result = await generateSummary(solutionId);
+    // ✅ FIXED: Pass ALL required parameters
+    const result = await generateSummary(
+      solutionId,                    // 1
+      problemName,                   // 2 ← ADDED
+      pythonCode || '',                    // 3 ← ADDED
+      cppCode || '',                       // 4 ← ADDED
+      pythonTimeComplexity,          // 5
+      pythonSpaceComplexity,         // 6
+      cppTimeComplexity,             // 7
+      cppSpaceComplexity,            // 8
+      notes                          // 9 ← ADDED
+    );
+
+    console.log('Result from generateSummary:', result);
+    
     if (result) {
       setSummary(result);
     }
   };
 
-  // Display existing summary if available, otherwise show generated
   const displaySummary = summary || existingSummary;
 
   return (
@@ -66,8 +80,10 @@ export const AIAnalysis = ({
       ) : displaySummary ? (
         <AISummary
           summary={displaySummary}
-          timeComplexity={timeComplexity}
-          spaceComplexity={spaceComplexity}
+          pythonTimeComplexity={pythonTimeComplexity}
+          pythonSpaceComplexity={pythonSpaceComplexity}
+          cppTimeComplexity={cppTimeComplexity}
+          cppSpaceComplexity={cppSpaceComplexity}
           notes={notes}
         />
       ) : (

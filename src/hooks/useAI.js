@@ -7,11 +7,32 @@ export const useAI = () => {
   const [aiSummary, setAISummary] = useState(null);
   const [error, setError] = useState(null);
 
-  const generateSummary = async (solutionId) => {
+  // ✅ Updated to accept ALL parameters
+  const generateSummary = async (
+    solutionId,
+    problemName,
+    pythonCode,
+    cppCode,
+    pythonTimeComplexity,
+    pythonSpaceComplexity,
+    cppTimeComplexity,
+    cppSpaceComplexity,
+    notes = null
+  ) => {
     setIsGenerating(true);
     setError(null);
     try {
-      const response = await aiService.generateSummary(solutionId);
+      const response = await aiService.generateSummary(
+        solutionId,
+        problemName,
+        pythonCode,
+        cppCode,
+        pythonTimeComplexity,
+        pythonSpaceComplexity,
+        cppTimeComplexity,
+        cppSpaceComplexity,
+        notes
+      );
       setAISummary(response.summary);
       return response.summary;
     } catch (err) {
@@ -24,9 +45,9 @@ export const useAI = () => {
     }
   };
 
-  const executeCode = async (language, code, stdin = '') => {
+  const executeCode = async (language, code, stdin = '', usePython3 = true) => {
     try {
-      const response = await aiService.executeCode(language, code, stdin);
+      const response = await aiService.executeCode(language, code, stdin, usePython3);
       return response;
     } catch (err) {
       showToast.error('Code execution failed');

@@ -3,31 +3,42 @@ import { useNavigate } from 'react-router-dom';
 import { QBox } from './QBox';
 import { getDateKey } from '@utils/dateUtils';
 import { useStore } from '@store/store';
-import { dayService } from '@api/services/dayService';
 import { showToast } from '@utils/errorHandler';
 
-export const DayDropdown = ({ date, onClose }) => {
+export const DayDropdown = ({ 
+  date, 
+  dayId,        // ✅ RECEIVE dayId from parent
+  solutions,    // ✅ RECEIVE solutions from parent
+  onClose,
+  onRefresh     // ✅ Refresh callback
+}) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const dateKey = getDateKey(date);
   const { setSelectedDayId } = useStore();
 
+  // ✅ Check if solution exists for a problem number
+  const getSolutionForProblem = (problemNumber) => {
+    if (!solutions || solutions.length === 0) return null;
+    return solutions.find(s => s.problem_number === problemNumber);
+  };
+
   const handleQClick = async (qNumber) => {
     setIsLoading(true);
     try {
-      const day = await dayService.getDayByDate(dateKey);
-      
-      if (!day || !day.id) {
-        showToast.error('Day not found in database');
+      // ✅ Use dayId passed from parent instead of fetching again
+      if (!dayId) {
+        showToast.error('Day not found');
+        setIsLoading(false);
         return;
       }
       
-      setSelectedDayId(day.id);
+      setSelectedDayId(dayId);
       navigate(`/problem/${dateKey}/${qNumber}`);
       onClose();
       
     } catch (error) {
-      showToast.error('Failed to load day. Please try again.');
+      showToast.error('Failed to load problem. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -36,21 +47,20 @@ export const DayDropdown = ({ date, onClose }) => {
   return (
     <div className="absolute left-0 right-0 mt-1 z-50 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-2 min-w-30">
       <div className="space-y-0.5">
-        <QBox 
-          qNumber={1} 
-          onClick={() => handleQClick(1)}
-          disabled={isLoading}
-        />
-        <QBox 
-          qNumber={2} 
-          onClick={() => handleQClick(2)}
-          disabled={isLoading}
-        />
-        <QBox 
-          qNumber={3} 
-          onClick={() => handleQClick(3)}
-          disabled={isLoading}
-        />
+        {[1, 2, 3].map((qNumber) => {
+          const solution = getSolutionForProblem(qNumber);
+          return (
+            <QBox 
+              key={qNumber}
+              qNumber={qNumber}
+              onClick={() => handleQClick(qNumber)}
+              disabled={isLoading}
+              isSolved={!!solution}           // ✅ Pass if solved
+              solution={solution}             // ✅ Pass solution data
+              hasAI={!!solution?.ai_summary}  // ✅ Pass if has AI summary
+            />
+          );
+        })}
         {isLoading && (
           <div className="text-center text-xs text-gray-500 py-1">
             Loading...

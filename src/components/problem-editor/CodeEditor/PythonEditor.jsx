@@ -7,9 +7,10 @@ export const PythonEditor = ({ code, onChange, onRun, isEditing }) => {
       language="python"
       value={code}
       onChange={onChange}
-      onRun={onRun}
+      onRun={onRun}  // Now receives executionInfo
       isEditing={isEditing}
       label="🐍 Python"
+      showVersionSwitch={true}  // ✅ Show Python version toggle
     />
   );
 };

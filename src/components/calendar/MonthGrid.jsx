@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { WeekRow } from './WeekRow';
 import { getWeeksInMonth } from '@utils/dateUtils';
 
 export const MonthGrid = ({ year, monthIndex, monthName }) => {
+  // ✅ REVERT: Keep the original +7 logic
   const weeks = getWeeksInMonth(year, monthIndex + 7);
 
   return (
@@ -26,7 +27,10 @@ export const MonthGrid = ({ year, monthIndex, monthName }) => {
 
         {/* Weeks */}
         {weeks.map((week, index) => (
-          <WeekRow key={index} week={week} />
+          <WeekRow 
+            key={index} 
+            week={week}
+          />
         ))}
       </div>
     </div>

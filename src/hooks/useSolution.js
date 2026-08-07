@@ -7,10 +7,33 @@ export const useSolution = (solutionId, dayId, problemNumber) => {
   const queryClient = useQueryClient();
   const { 
     addSolution, 
+    addSolutions,  // ← ADD THIS
     updateSolution, 
     removeSolution,
     setCurrentSolution,
   } = useStore();
+
+  // ✅ GET ALL SOLUTIONS FOR A DAY - THIS WAS MISSING!
+  const getSolutionsByDay = useQuery({
+    queryKey: ['solutions', 'day', dayId],
+    queryFn: async () => {
+      if (!dayId) return [];
+      const data = await solutionService.getSolutionsByDay(dayId);
+      // Store solutions in the store
+      if (data && data.length > 0) {
+        addSolutions(dayId, data);
+      }
+      return data || [];
+    },
+    enabled: !!dayId,
+    retry: false,
+    onError: (error) => {
+      console.error('Error fetching solutions for day:', error);
+      if (error?.response?.status !== 404) {
+        showToast.error('Failed to load solutions');
+      }
+    },
+  });
 
   // ✅ Get solution by day and problem number - SILENTLY handle 404
   const getSolutionByDayAndProblem = useQuery({
@@ -54,6 +77,7 @@ export const useSolution = (solutionId, dayId, problemNumber) => {
       showToast.success('Solution created successfully!');
       addSolution(data.day_id, data);
       setCurrentSolution(data);
+      queryClient.invalidateQueries({ queryKey: ['solutions', 'day', data.day_id] }); // ← FIXED
       queryClient.invalidateQueries({ queryKey: ['solution', data.day_id, data.problem_number] });
       queryClient.invalidateQueries({ queryKey: ['day', data.day_id] });
     },
@@ -70,6 +94,7 @@ export const useSolution = (solutionId, dayId, problemNumber) => {
       showToast.success('Solution updated successfully!');
       updateSolution(data.day_id, data);
       setCurrentSolution(data);
+      queryClient.invalidateQueries({ queryKey: ['solutions', 'day', data.day_id] }); // ← FIXED
       queryClient.invalidateQueries({ queryKey: ['solution', data.day_id, data.problem_number] });
       queryClient.invalidateQueries({ queryKey: ['solution', data.id] });
       queryClient.invalidateQueries({ queryKey: ['day', data.day_id] });
@@ -86,6 +111,7 @@ export const useSolution = (solutionId, dayId, problemNumber) => {
     onSuccess: (_, variables) => {
       showToast.success('Solution deleted');
       removeSolution(variables.dayId, variables.solutionId);
+      queryClient.invalidateQueries({ queryKey: ['solutions', 'day', variables.dayId] }); // ← FIXED
       queryClient.invalidateQueries({ queryKey: ['solution', variables.dayId, variables.problemNumber] });
       queryClient.invalidateQueries({ queryKey: ['day', variables.dayId] });
     },
@@ -100,7 +126,7 @@ export const useSolution = (solutionId, dayId, problemNumber) => {
     mutationFn: (id) => solutionService.generateAISummary(id),
     onSuccess: (data) => {
       showToast.success('AI summary generated!');
-      queryClient.invalidateQueries({ queryKey: ['solution'] });
+      queryClient.invalidateQueries({ queryKey: ['solutions'] });
       queryClient.invalidateQueries({ queryKey: ['solution', dayId, problemNumber] });
     },
     onError: (error) => {
@@ -110,14 +136,22 @@ export const useSolution = (solutionId, dayId, problemNumber) => {
   });
 
   return {
+    // ✅ Return solutions list
+    solutions: getSolutionsByDay.data || [],
+    solutionsLoading: getSolutionsByDay.isLoading,
+    solutionsError: getSolutionsByDay.error,
+    refetchSolutions: getSolutionsByDay.refetch, // ← ADD THIS
+    
     solution: getSolutionByDayAndProblem.data, // ✅ null for 404
     solutionById: getSolution.data,
-    isLoading: getSolutionByDayAndProblem.isLoading || getSolution.isLoading,
+    isLoading: getSolutionByDayAndProblem.isLoading || getSolution.isLoading || getSolutionsByDay.isLoading,
     error: getSolutionByDayAndProblem.error || getSolution.error,
+    
     createSolution: createSolution.mutateAsync,
     updateSolution: updateSolutionMutation.mutateAsync,
     deleteSolution: deleteSolution.mutateAsync,
     generateAISummary: generateAISummary.mutateAsync,
+    
     isCreating: createSolution.isPending,
     isUpdating: updateSolutionMutation.isPending,
     isDeleting: deleteSolution.isPending,
