@@ -35,7 +35,7 @@ export const DayDropdown = ({
       onClose();
       
     } catch (error) {
-      showToast.error('Failed to load problem. Please try again.');
+      showToast.error('Day not found in database. Please create the day first.');
     } finally {
       setIsLoading(false);
     }
