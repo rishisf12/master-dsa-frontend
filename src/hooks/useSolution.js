@@ -7,13 +7,13 @@ export const useSolution = (solutionId, dayId, problemNumber) => {
   const queryClient = useQueryClient();
   const { 
     addSolution, 
-    addSolutions,  // ← ADD THIS
+    addSolutions,
     updateSolution, 
     removeSolution,
     setCurrentSolution,
   } = useStore();
 
-  // ✅ GET ALL SOLUTIONS FOR A DAY - THIS WAS MISSING!
+  // ✅ GET ALL SOLUTIONS FOR A DAY - WITH PROPER 404 HANDLING
   const getSolutionsByDay = useQuery({
     queryKey: ['solutions', 'day', dayId],
     queryFn: async () => {
@@ -27,9 +27,10 @@ export const useSolution = (solutionId, dayId, problemNumber) => {
     },
     enabled: !!dayId,
     retry: false,
+    staleTime: 1000 * 60 * 5, // 5 minutes - prevents infinite refetching
     onError: (error) => {
-      console.error('Error fetching solutions for day:', error);
       if (error?.response?.status !== 404) {
+        console.error('Error fetching solutions for day:', error);
         showToast.error('Failed to load solutions');
       }
     },
@@ -54,7 +55,7 @@ export const useSolution = (solutionId, dayId, problemNumber) => {
     },
     enabled: !!dayId && !!problemNumber,
     retry: false,
-    // ✅ Don't show error state for 404
+    staleTime: 1000 * 60 * 5, // 5 minutes
     onError: (error) => {
       if (error?.response?.status !== 404) {
         console.error('Error fetching solution:', error);
@@ -77,7 +78,7 @@ export const useSolution = (solutionId, dayId, problemNumber) => {
       showToast.success('Solution created successfully!');
       addSolution(data.day_id, data);
       setCurrentSolution(data);
-      queryClient.invalidateQueries({ queryKey: ['solutions', 'day', data.day_id] }); // ← FIXED
+      queryClient.invalidateQueries({ queryKey: ['solutions', 'day', data.day_id] });
       queryClient.invalidateQueries({ queryKey: ['solution', data.day_id, data.problem_number] });
       queryClient.invalidateQueries({ queryKey: ['day', data.day_id] });
     },
@@ -94,7 +95,7 @@ export const useSolution = (solutionId, dayId, problemNumber) => {
       showToast.success('Solution updated successfully!');
       updateSolution(data.day_id, data);
       setCurrentSolution(data);
-      queryClient.invalidateQueries({ queryKey: ['solutions', 'day', data.day_id] }); // ← FIXED
+      queryClient.invalidateQueries({ queryKey: ['solutions', 'day', data.day_id] });
       queryClient.invalidateQueries({ queryKey: ['solution', data.day_id, data.problem_number] });
       queryClient.invalidateQueries({ queryKey: ['solution', data.id] });
       queryClient.invalidateQueries({ queryKey: ['day', data.day_id] });
@@ -111,7 +112,7 @@ export const useSolution = (solutionId, dayId, problemNumber) => {
     onSuccess: (_, variables) => {
       showToast.success('Solution deleted');
       removeSolution(variables.dayId, variables.solutionId);
-      queryClient.invalidateQueries({ queryKey: ['solutions', 'day', variables.dayId] }); // ← FIXED
+      queryClient.invalidateQueries({ queryKey: ['solutions', 'day', variables.dayId] });
       queryClient.invalidateQueries({ queryKey: ['solution', variables.dayId, variables.problemNumber] });
       queryClient.invalidateQueries({ queryKey: ['day', variables.dayId] });
     },
@@ -140,7 +141,7 @@ export const useSolution = (solutionId, dayId, problemNumber) => {
     solutions: getSolutionsByDay.data || [],
     solutionsLoading: getSolutionsByDay.isLoading,
     solutionsError: getSolutionsByDay.error,
-    refetchSolutions: getSolutionsByDay.refetch, // ← ADD THIS
+    refetchSolutions: getSolutionsByDay.refetch,
     
     solution: getSolutionByDayAndProblem.data, // ✅ null for 404
     solutionById: getSolution.data,

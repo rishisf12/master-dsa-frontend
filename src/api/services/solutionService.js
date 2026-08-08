@@ -25,10 +25,18 @@ export const solutionService = {
     }
   },
 
-  // ✅ FIXED: Rename to match hook's expected method name
+  // ✅ FIXED: Handle 404 in getSolutionsByDay
   getSolutionsByDay: async (dayId) => {
-    const response = await apiClient.get(API_ENDPOINTS.DAY_SOLUTIONS(dayId));
-    return response.data;
+    try {
+      const response = await apiClient.get(API_ENDPOINTS.DAY_SOLUTIONS(dayId));
+      return response.data;
+    } catch (error) {
+      // ✅ Return empty array on 404
+      if (error.response?.status === 404) {
+        return [];
+      }
+      throw error;
+    }
   },
 
   // ✅ Keep alias for backward compatibility
