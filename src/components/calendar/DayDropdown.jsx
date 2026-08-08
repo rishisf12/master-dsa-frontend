@@ -70,3 +70,6 @@ export const DayDropdown = ({
     </div>
   );
 };
+
+console.log('DayDropdown - date received:', date);
+console.log('DayDropdown - ISO:', date.toISOString());

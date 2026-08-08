@@ -99,3 +99,7 @@ export const DayCell = ({ day, onDayClick, selectedDate }) => {
     </div>
   );
 };
+
+console.log('DayCell - day object:', day);
+console.log('DayCell - ISO string:', day.toISOString());
+console.log('DayCell - date string for API:', day.toISOString().split('T')[0]);
