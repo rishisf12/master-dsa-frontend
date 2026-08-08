@@ -1,70 +1,99 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { QBox } from './QBox';
-import { getDateKey } from '@utils/dateUtils';
+import React, { useState, useEffect } from 'react';
+import { isToday } from '@utils/dateUtils';
+import { DayDropdown } from './DayDropdown';
+import { useSolution } from '@hooks/useSolution';
 import { useStore } from '@store/store';
-import { showToast } from '@utils/errorHandler';
 import apiClient from '@api/client';
 import { API_ENDPOINTS } from '@api/endpoints';
 
-export const DayDropdown = ({ 
-  date, 
-  dayId,        
-  solutions,    
-  onClose,
-  onRefresh     
-}) => {
-  const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
-  const dateKey = getDateKey(date);
-  const { setSelectedDayId } = useStore();
+export const DayCell = ({ day, onDayClick, selectedDate }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [actualDayId, setActualDayId] = useState(null);
+  const [isLoadingDayId, setIsLoadingDayId] = useState(false);
 
-  const getSolutionForProblem = (problemNumber) => {
-    if (!solutions || solutions.length === 0) return null;
-    return solutions.find(s => s.problem_number === problemNumber);
-  };
+  // Fetch actual database day ID
+  useEffect(() => {
+    const fetchDayId = async () => {
+      if (!day) return;
+      
+      const dateStr = day.toISOString().split('T')[0];
+      setIsLoadingDayId(true);
+      
+      try {
+        const response = await apiClient.get(API_ENDPOINTS.DAY_BY_DATE(dateStr));
+        setActualDayId(response.data.id);
+      } catch (error) {
+        console.error(`Day not found in database for ${dateStr}`);
+        setActualDayId(null);
+      } finally {
+        setIsLoadingDayId(false);
+      }
+    };
+    
+    fetchDayId();
+  }, [day]);
 
-  const handleQClick = async (qNumber) => {
-    setIsLoading(true);
-    try {
-      const dateStr = date.toISOString().split('T')[0];
-      const response = await apiClient.get(API_ENDPOINTS.DAY_BY_DATE(dateStr));
-      const actualDayId = response.data.id;
-      
-      setSelectedDayId(actualDayId);
-      navigate(`/problem/${dateKey}/${qNumber}`);
-      onClose();
-      
-    } catch (error) {
-      showToast.error('Failed to load problem. Please try again.');
-    } finally {
-      setIsLoading(false);
+  // Fetch solutions using actual database ID
+  const { solutions, solutionsLoading, refetchSolutions } = useSolution(
+    null,
+    actualDayId,
+    null
+  );
+
+  const storeSolutions = useStore((state) => state.solutions);
+  const daySolutions = actualDayId ? storeSolutions[actualDayId] || [] : [];
+
+  if (!day) {
+    return <div className="w-full h-8" />;
+  }
+
+  const isCurrentDay = isToday(day);
+  const dayNumber = day.getDate();
+
+  const handleClick = () => {
+    setIsOpen(!isOpen);
+    if (onDayClick) {
+      onDayClick(day);
     }
   };
 
+  const hasSolutions = daySolutions && daySolutions.length > 0;
+
   return (
-    <div className="absolute left-0 right-0 mt-1 z-50 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-lg shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-2 min-w-30">
-      <div className="space-y-0.5">
-        {[1, 2, 3].map((qNumber) => {
-          const solution = getSolutionForProblem(qNumber);
-          return (
-            <QBox 
-              key={qNumber}
-              qNumber={qNumber}
-              onClick={() => handleQClick(qNumber)}
-              disabled={isLoading}
-              isSolved={!!solution}
-              solution={solution}
-              hasAI={!!solution?.ai_summary}
-            />
-          );
-        })}
-        {isLoading && (
-          <div className="text-center text-xs text-gray-500 py-1">
-            Loading...
-          </div>
+    <div className="relative">
+      <button
+        onClick={handleClick}
+        className={`
+          w-full h-8 rounded-lg transition-all duration-200
+          flex items-center justify-center text-sm font-medium
+          hover:shadow-md transform hover:scale-105
+          relative
+          ${isCurrentDay 
+            ? 'bg-linear-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 shadow-md' 
+            : hasSolutions
+              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50'
+              : 'bg-gray-50 dark:bg-gray-700/50 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-600'
+          }
+        `}
+      >
+        {dayNumber}
+        {hasSolutions && (
+          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
         )}
-      </div>
+        {isLoadingDayId && (
+          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
+        )}
+      </button>
+
+      {isOpen && (
+        <DayDropdown 
+          date={day}
+          dayId={actualDayId}
+          solutions={daySolutions}
+          onClose={() => setIsOpen(false)}
+          onRefresh={refetchSolutions}
+        />
+      )}
     </div>
   );
 };
