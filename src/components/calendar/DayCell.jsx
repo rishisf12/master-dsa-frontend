@@ -9,23 +9,32 @@ import { API_ENDPOINTS } from '@api/endpoints';
 export const DayCell = ({ day, onDayClick, selectedDate }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [actualDayId, setActualDayId] = useState(null);
-  
+  const [loading, setLoading] = useState(true);
+
   // Fetch actual database day ID
   useEffect(() => {
     const fetchDayId = async () => {
-      if (!day) return;
-      const dateStr = day.toISOString().split('T')[0];
+      if (!day) {
+        setLoading(false);
+        return;
+      }
+      
       try {
+        const dateStr = day.toISOString().split('T')[0];
         const response = await apiClient.get(API_ENDPOINTS.DAY_BY_DATE(dateStr));
         setActualDayId(response.data.id);
+        console.log('✅ Day ID fetched:', response.data.id, 'for date:', dateStr);
       } catch (error) {
-        console.error('Day not found:', dateStr);
+        console.error('❌ Day not found for date:', day.toISOString().split('T')[0]);
         setActualDayId(null);
+      } finally {
+        setLoading(false);
       }
     };
+    
     fetchDayId();
   }, [day]);
-  
+
   // Fetch solutions using actual day ID
   const { solutions, solutionsLoading, refetchSolutions } = useSolution(
     null,
@@ -70,7 +79,10 @@ export const DayCell = ({ day, onDayClick, selectedDate }) => {
         `}
       >
         {dayNumber}
-        {hasSolutions && (
+        {loading && (
+          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
+        )}
+        {hasSolutions && !loading && (
           <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
         )}
       </button>
