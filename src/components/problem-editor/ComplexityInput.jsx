@@ -64,7 +64,7 @@ export const ComplexityInput = ({ formData, setFormData, isEditing }) => {
             onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
             placeholder="Explain your approach..."
             disabled={!isEditing}
-            className="w-full px-4 py-2 border rounded-lg transition-colors duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed min-h-[80px]"
+            className="w-full px-4 py-2 border rounded-lg transition-colors duration-200 bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed min-h-20"
           />
         </div>
       </div>
