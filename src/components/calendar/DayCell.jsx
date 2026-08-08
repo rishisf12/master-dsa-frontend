@@ -3,25 +3,38 @@ import { isToday } from '@utils/dateUtils';
 import { DayDropdown } from './DayDropdown';
 import { useSolution } from '@hooks/useSolution';
 import { useStore } from '@store/store';
+import apiClient from '@api/client';
+import { API_ENDPOINTS } from '@api/endpoints';
 
 export const DayCell = ({ day, onDayClick, selectedDate }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [actualDayId, setActualDayId] = useState(null);
   
-  // ✅ Generate dayId from date
-  const dayId = day ? day.getDate() : null;
-  const month = day ? day.getMonth() + 1 : null;
-  const year = day ? day.getFullYear() : null;
+  // Fetch actual database day ID
+  useEffect(() => {
+    const fetchDayId = async () => {
+      if (!day) return;
+      const dateStr = day.toISOString().split('T')[0];
+      try {
+        const response = await apiClient.get(API_ENDPOINTS.DAY_BY_DATE(dateStr));
+        setActualDayId(response.data.id);
+      } catch (error) {
+        console.error('Day not found:', dateStr);
+        setActualDayId(null);
+      }
+    };
+    fetchDayId();
+  }, [day]);
   
-  // ✅ Fetch solutions for this day
+  // Fetch solutions using actual day ID
   const { solutions, solutionsLoading, refetchSolutions } = useSolution(
-    null, // solutionId
-    dayId, // dayId
-    null // problemNumber
+    null,
+    actualDayId,
+    null
   );
   
-  // ✅ Get solutions from store
   const storeSolutions = useStore((state) => state.solutions);
-  const daySolutions = dayId ? storeSolutions[dayId] || [] : [];
+  const daySolutions = actualDayId ? storeSolutions[actualDayId] || [] : [];
 
   if (!day) {
     return <div className="w-full h-8" />;
@@ -37,9 +50,7 @@ export const DayCell = ({ day, onDayClick, selectedDate }) => {
     }
   };
 
-  // ✅ Check if day has solutions
   const hasSolutions = daySolutions && daySolutions.length > 0;
-  const solutionCount = daySolutions ? daySolutions.length : 0;
 
   return (
     <div className="relative">
@@ -59,8 +70,6 @@ export const DayCell = ({ day, onDayClick, selectedDate }) => {
         `}
       >
         {dayNumber}
-        
-        {/* ✅ Show dot indicator if solutions exist */}
         {hasSolutions && (
           <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
         )}
@@ -69,7 +78,7 @@ export const DayCell = ({ day, onDayClick, selectedDate }) => {
       {isOpen && (
         <DayDropdown 
           date={day}
-          dayId={dayId}
+          dayId={actualDayId}
           solutions={daySolutions}
           onClose={() => setIsOpen(false)}
           onRefresh={refetchSolutions}
