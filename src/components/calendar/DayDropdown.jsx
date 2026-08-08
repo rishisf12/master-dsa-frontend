@@ -4,20 +4,21 @@ import { QBox } from './QBox';
 import { getDateKey } from '@utils/dateUtils';
 import { useStore } from '@store/store';
 import { showToast } from '@utils/errorHandler';
+import { apiClient } from '@api/client';
+import { API_ENDPOINTS } from '@api/endpoints';
 
 export const DayDropdown = ({ 
   date, 
-  dayId,        // ✅ RECEIVE dayId from parent
-  solutions,    // ✅ RECEIVE solutions from parent
+  dayId,        
+  solutions,    
   onClose,
-  onRefresh     // ✅ Refresh callback
+  onRefresh     
 }) => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const dateKey = getDateKey(date);
   const { setSelectedDayId } = useStore();
 
-  // ✅ Check if solution exists for a problem number
   const getSolutionForProblem = (problemNumber) => {
     if (!solutions || solutions.length === 0) return null;
     return solutions.find(s => s.problem_number === problemNumber);
@@ -26,14 +27,11 @@ export const DayDropdown = ({
   const handleQClick = async (qNumber) => {
     setIsLoading(true);
     try {
-      // ✅ Use dayId passed from parent instead of fetching again
-      if (!dayId) {
-        showToast.error('Day not found');
-        setIsLoading(false);
-        return;
-      }
+      const dateStr = date.toISOString().split('T')[0];
+      const response = await apiClient.get(API_ENDPOINTS.DAY_BY_DATE(dateStr));
+      const actualDayId = response.data.id;
       
-      setSelectedDayId(dayId);
+      setSelectedDayId(actualDayId);
       navigate(`/problem/${dateKey}/${qNumber}`);
       onClose();
       
@@ -55,9 +53,9 @@ export const DayDropdown = ({
               qNumber={qNumber}
               onClick={() => handleQClick(qNumber)}
               disabled={isLoading}
-              isSolved={!!solution}           // ✅ Pass if solved
-              solution={solution}             // ✅ Pass solution data
-              hasAI={!!solution?.ai_summary}  // ✅ Pass if has AI summary
+              isSolved={!!solution}
+              solution={solution}
+              hasAI={!!solution?.ai_summary}
             />
           );
         })}
