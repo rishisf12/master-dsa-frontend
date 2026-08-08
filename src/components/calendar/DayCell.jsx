@@ -7,6 +7,11 @@ import apiClient from '@api/client';
 import { API_ENDPOINTS } from '@api/endpoints';
 
 export const DayCell = ({ day, onDayClick, selectedDate }) => {
+  // ✅ Console logs INSIDE the component
+  console.log('DayCell - day object:', day);
+  console.log('DayCell - ISO string:', day?.toISOString());
+  console.log('DayCell - date string for API:', day?.toISOString().split('T')[0]);
+
   const [isOpen, setIsOpen] = useState(false);
   const [actualDayId, setActualDayId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,6 +26,8 @@ export const DayCell = ({ day, onDayClick, selectedDate }) => {
       
       try {
         const dateStr = day.toISOString().split('T')[0];
+        console.log('📅 Fetching day ID for date:', dateStr);
+        
         const response = await apiClient.get(API_ENDPOINTS.DAY_BY_DATE(dateStr));
         setActualDayId(response.data.id);
         console.log('✅ Day ID fetched:', response.data.id, 'for date:', dateStr);
@@ -99,7 +106,3 @@ export const DayCell = ({ day, onDayClick, selectedDate }) => {
     </div>
   );
 };
-
-console.log('DayCell - day object:', day);
-console.log('DayCell - ISO string:', day.toISOString());
-console.log('DayCell - date string for API:', day.toISOString().split('T')[0]);

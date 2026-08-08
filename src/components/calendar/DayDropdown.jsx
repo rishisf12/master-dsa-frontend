@@ -14,6 +14,11 @@ export const DayDropdown = ({
   onClose,
   onRefresh     
 }) => {
+  // ✅ Console logs INSIDE the component
+  console.log('DayDropdown - date received:', date);
+  console.log('DayDropdown - ISO:', date?.toISOString());
+  console.log('DayDropdown - dateKey:', getDateKey(date));
+
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const dateKey = getDateKey(date);
@@ -70,6 +75,3 @@ export const DayDropdown = ({
     </div>
   );
 };
-
-console.log('DayDropdown - date received:', date);
-console.log('DayDropdown - ISO:', date.toISOString());
