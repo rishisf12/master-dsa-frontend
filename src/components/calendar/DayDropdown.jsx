@@ -4,7 +4,7 @@ import { QBox } from './QBox';
 import { getDateKey } from '@utils/dateUtils';
 import { useStore } from '@store/store';
 import { showToast } from '@utils/errorHandler';
-import { apiClient } from '@api/client';
+import apiClient from '@api/client';
 import { API_ENDPOINTS } from '@api/endpoints';
 
 export const DayDropdown = ({ 
