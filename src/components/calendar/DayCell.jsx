@@ -1,56 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { isToday } from '@utils/dateUtils';
 import { DayDropdown } from './DayDropdown';
-import { useSolution } from '@hooks/useSolution';
 import { useStore } from '@store/store';
-import apiClient from '@api/client';
-import { API_ENDPOINTS } from '@api/endpoints';
 
 export const DayCell = ({ day, onDayClick, selectedDate }) => {
-  // ✅ Console logs INSIDE the component
-  console.log('DayCell - day object:', day);
-  console.log('DayCell - ISO string:', day?.toISOString());
-  console.log('DayCell - date string for API:', day?.toISOString().split('T')[0]);
-
   const [isOpen, setIsOpen] = useState(false);
-  const [actualDayId, setActualDayId] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  // Fetch actual database day ID
-  useEffect(() => {
-    const fetchDayId = async () => {
-      if (!day) {
-        setLoading(false);
-        return;
-      }
-      
-      try {
-        const dateStr = day.toISOString().split('T')[0];
-        console.log('📅 Fetching day ID for date:', dateStr);
-        
-        const response = await apiClient.get(API_ENDPOINTS.DAY_BY_DATE(dateStr));
-        setActualDayId(response.data.id);
-        console.log('✅ Day ID fetched:', response.data.id, 'for date:', dateStr);
-      } catch (error) {
-        console.error('❌ Day not found for date:', day.toISOString().split('T')[0]);
-        setActualDayId(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchDayId();
-  }, [day]);
-
-  // Fetch solutions using actual day ID
-  const { solutions, solutionsLoading, refetchSolutions } = useSolution(
-    null,
-    actualDayId,
-    null
-  );
-  
   const storeSolutions = useStore((state) => state.solutions);
-  const daySolutions = actualDayId ? storeSolutions[actualDayId] || [] : [];
 
   if (!day) {
     return <div className="w-full h-8" />;
@@ -58,6 +13,7 @@ export const DayCell = ({ day, onDayClick, selectedDate }) => {
 
   const isCurrentDay = isToday(day);
   const dayNumber = day.getDate();
+  const daySolutions = storeSolutions[dayNumber] || [];
 
   const handleClick = () => {
     setIsOpen(!isOpen);
@@ -86,10 +42,7 @@ export const DayCell = ({ day, onDayClick, selectedDate }) => {
         `}
       >
         {dayNumber}
-        {loading && (
-          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
-        )}
-        {hasSolutions && !loading && (
+        {hasSolutions && (
           <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
         )}
       </button>
@@ -97,10 +50,8 @@ export const DayCell = ({ day, onDayClick, selectedDate }) => {
       {isOpen && (
         <DayDropdown 
           date={day}
-          dayId={actualDayId}
           solutions={daySolutions}
           onClose={() => setIsOpen(false)}
-          onRefresh={refetchSolutions}
         />
       )}
     </div>

@@ -9,16 +9,10 @@ import { API_ENDPOINTS } from '@api/endpoints';
 
 export const DayDropdown = ({ 
   date, 
-  dayId,        
   solutions,    
   onClose,
   onRefresh     
 }) => {
-  // ✅ Console logs INSIDE the component
-  console.log('DayDropdown - date received:', date);
-  console.log('DayDropdown - ISO:', date?.toISOString());
-  console.log('DayDropdown - dateKey:', getDateKey(date));
-
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const dateKey = getDateKey(date);
@@ -32,13 +26,11 @@ export const DayDropdown = ({
   const handleQClick = async (qNumber) => {
     setIsLoading(true);
     try {
-      if (!dayId) {
-        showToast.error('Day not found');
-        setIsLoading(false);
-        return;
-      }
+      const dateStr = date.toISOString().split('T')[0];
+      const response = await apiClient.get(API_ENDPOINTS.DAY_BY_DATE(dateStr));
+      const actualDayId = response.data.id;
       
-      setSelectedDayId(dayId);
+      setSelectedDayId(actualDayId);
       navigate(`/problem/${dateKey}/${qNumber}`);
       onClose();
       
