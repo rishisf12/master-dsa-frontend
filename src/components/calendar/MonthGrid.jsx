@@ -3,8 +3,7 @@ import { WeekRow } from './WeekRow';
 import { getWeeksInMonth } from '@utils/dateUtils';
 
 export const MonthGrid = ({ year, monthIndex, monthName }) => {
-  // ✅ REVERT: Keep the original +7 logic
-  const weeks = getWeeksInMonth(year, monthIndex + 7);
+  const weeks = getWeeksInMonth(year, monthIndex);
 
   return (
     <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 p-4 hover:shadow-xl transition-shadow duration-300">
